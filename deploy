@@ -1,0 +1,27 @@
+#! /bin/bash
+
+USER=
+HOST=
+DEPLOY_DIR_ROOT=
+
+# copy files over
+cd ../
+tar -czf lmgtfy.tar.gz slack-lmgtfy
+scp lmgtfy.tar.gz $USER@$HOST:$DEPLOY_DIR_ROOT
+rm lmgtfy.tar.gz
+
+# go to server
+ssh -T $USER@$HOST << EOF
+	pm2 stop lmgtfy
+	cd $DEPLOY_DIR_ROOT
+	if [ -d "$DEPLOY_DIR_ROOT/lmgtfy" ]; then
+		rm -rf lmgtfy
+	fi
+	tar -xzf lmgtfy.tar.gz
+	rm lmgtfy.tar.gz
+	cd lmgtfy
+	rm deploy
+	sudo npm install
+	pm2 start app.js --name="lmgtfy"
+EOF
+
